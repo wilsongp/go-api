@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
-	"mongoapi/graphql"
-	"mongoapi/routing"
-	"mongoapi/shortcut"
+	"github.com/wilsongp/go-api/graphql"
+	"github.com/wilsongp/go-api/routing"
+	"github.com/wilsongp/go-api/shortcut"
 	"net/http"
 	"time"
 

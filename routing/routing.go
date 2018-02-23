@@ -1,7 +1,7 @@
 package routing
 
 import (
-	"mongoapi/middleware"
+	"github.com/wilsongp/go-api/middleware"
 	"net/http"
 
 	"github.com/gorilla/mux"

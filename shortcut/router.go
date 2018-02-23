@@ -1,7 +1,7 @@
 package shortcut
 
 import (
-	"mongoapi/routing"
+	"github.com/wilsongp/go-api/routing"
 )
 
 var controller = &Controller{Repository: Repository{}}
