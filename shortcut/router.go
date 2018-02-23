@@ -1,67 +1,35 @@
 package shortcut
 
 import (
-	"net/http"
-
-	"mongoapi/logger"
-
-	"github.com/gorilla/mux"
+	"mongoapi/routing"
 )
 
 var controller = &Controller{Repository: Repository{}}
 
-// Route defines a route
-type Route struct {
-	Name        string
-	Method      string
-	Pattern     string
-	HandlerFunc http.HandlerFunc
-}
-
-// Routes defines the list of routes of our API
-type Routes []Route
-
-var routes = Routes{
-	Route{
-		"Index",
-		"GET",
-		"/",
-		controller.Index,
+//Routes with associated controllers
+var Routes = routing.Routes{
+	{
+		Name:        "Index",
+		Method:      "GET",
+		Pattern:     "/",
+		HandlerFunc: controller.Index,
 	},
-	Route{
-		"AddShortcut",
-		"POST",
-		"/",
-		controller.AddShortcut,
+	{
+		Name:        "AddShortcut",
+		Method:      "POST",
+		Pattern:     "/",
+		HandlerFunc: controller.AddShortcut,
 	},
-	Route{
-		"UpdateShortcut",
-		"PUT",
-		"/",
-		controller.UpdateShortcut,
+	{
+		Name:        "UpdateShortcut",
+		Method:      "PUT",
+		Pattern:     "/",
+		HandlerFunc: controller.UpdateShortcut,
 	},
-	Route{
-		"DeleteShortcut",
-		"DELETE",
-		"/",
-		controller.DeleteShortcut,
+	{
+		Name:        "DeleteShortcut",
+		Method:      "DELETE",
+		Pattern:     "/",
+		HandlerFunc: controller.DeleteShortcut,
 	},
-}
-
-//NewRouter configures a new router to the API
-func NewRouter() *mux.Router {
-	router := mux.NewRouter().StrictSlash(true)
-	for _, route := range routes {
-		var handler http.Handler
-		handler = route.HandlerFunc
-		handler = logger.Logger(handler, route.Name)
-
-		router.
-			Methods(route.Method).
-			Path(route.Pattern).
-			Name(route.Name).
-			Handler(handler)
-
-	}
-	return router
 }
