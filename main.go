@@ -15,7 +15,7 @@ import (
 var addr = "localhost:9000"
 
 func main() {
-	routes := append(shortcut.Routes, graphql.Routes...)
+	routes := append(graphql.Routes, shortcut.Routes...)
 	router := routing.NewRouter(routes)
 
 	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
