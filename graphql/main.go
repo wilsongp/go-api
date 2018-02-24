@@ -73,24 +73,7 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 					Type: graphql.NewNonNull(graphql.String),
 				},
 			},
-			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-				// marshall and cast the argument value
-				done, _ := params.Args["done"].(bool)
-				id, _ := params.Args["id"].(string)
-				affectedTodo := Todo{}
-
-				// Search list for todo with id and change the done variable
-				for i := 0; i < len(TodoList); i++ {
-					if TodoList[i].ID == id {
-						TodoList[i].Done = done
-						// Assign updated todo so we can return it
-						affectedTodo = TodoList[i]
-						break
-					}
-				}
-				// Return affected todo
-				return affectedTodo, nil
-			},
+			Resolve: todos.UpdateTodoResolver,
 		},
 	},
 })

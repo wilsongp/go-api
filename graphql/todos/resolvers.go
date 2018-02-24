@@ -1,6 +1,7 @@
 package todos
 
 import (
+	"fmt"
   "log"
 	"github.com/graphql-go/graphql"
 	"gopkg.in/mgo.v2"
@@ -43,4 +44,28 @@ func CreateTodoResolver(params graphql.ResolveParams) (interface{}, error) {
   // - we previously specified the return Type to be `todos.TodoType`
   // - `Todo` struct maps to `todos.TodoType`, as defined in `todos.TodoType` ObjectConfig`
   return todo, nil
+}
+
+//UpdateTodoResolver makes changes to the todo in the database
+func UpdateTodoResolver(params graphql.ResolveParams) (interface{}, error) {
+  // marshall and cast the argument value
+  done, _ := params.Args["done"].(bool)
+  id, _ := params.Args["id"].(string)
+
+  session, _ := mgo.Dial(SERVER)
+	defer session.Close()
+	c := session.DB(DBNAME).C(DOCNAME)
+  
+  var result Todo
+	if err := c.FindId(id).All(&result); err != nil {
+		fmt.Println("Failed to read:", err)
+  }
+  
+  // update
+  result.done = done
+
+  session.DB(DBNAME).C(DOCNAME).UpdateId(id, result)
+
+  // Return affected todo
+  return result, nil
 }
