@@ -1,6 +1,7 @@
 package graphql
 
 import (
+	"github.com/wilsongp/go-api/graphql/todos"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/graphql-go/graphql"
+	
 )
 
 type Todo struct {
@@ -39,24 +41,6 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-// define custom GraphQL ObjectType `todoType` for our Golang struct `Todo`
-// Note that
-// - the fields in our todoType maps with the json tags for the fields in our struct
-// - the field type matches the field type in our struct
-var todoType = graphql.NewObject(graphql.ObjectConfig{
-	Name: "Todo",
-	Fields: graphql.Fields{
-		"id": &graphql.Field{
-			Type: graphql.String,
-		},
-		"text": &graphql.Field{
-			Type: graphql.String,
-		},
-		"done": &graphql.Field{
-			Type: graphql.Boolean,
-		},
-	},
-})
 
 // root mutation
 var rootMutation = graphql.NewObject(graphql.ObjectConfig{
@@ -66,44 +50,20 @@ var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 			curl -g 'http://localhost:8080/graphql?query=mutation+_{createTodo(text:"My+new+todo"){id,text,done}}'
 		*/
 		"createTodo": &graphql.Field{
-			Type:        todoType, // the return type for this field
+			Type:        todos.TodoType, // the return type for this field
 			Description: "Create new todo",
 			Args: graphql.FieldConfigArgument{
 				"text": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.String),
 				},
 			},
-			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-
-				// marshall and cast the argument value
-				text, _ := params.Args["text"].(string)
-
-				// figure out new id
-				newID := GenerateGUID(8)
-
-				// perform mutation operation here
-				// for e.g. create a Todo and save to DB.
-				newTodo := Todo{
-					ID:   newID,
-					Text: text,
-					Done: false,
-				}
-
-				TodoList = append(TodoList, newTodo)
-
-				// return the new Todo object that we supposedly save to DB
-				// Note here that
-				// - we are returning a `Todo` struct instance here
-				// - we previously specified the return Type to be `todoType`
-				// - `Todo` struct maps to `todoType`, as defined in `todoType` ObjectConfig`
-				return newTodo, nil
-			},
+			Resolve: todos.CreateTodoResolver,
 		},
 		/*
 			curl -g 'http://localhost:8080/graphql?query=mutation+_{updateTodo(id:"a",done:true){id,text,done}}'
 		*/
 		"updateTodo": &graphql.Field{
-			Type:        todoType, // the return type for this field
+			Type:        todos.TodoType, // the return type for this field
 			Description: "Update existing todo, mark it done or not done",
 			Args: graphql.FieldConfigArgument{
 				"done": &graphql.ArgumentConfig{
@@ -147,7 +107,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 		   curl -g 'http://localhost:8080/graphql?query={todo(id:"b"){id,text,done}}'
 		*/
 		"todo": &graphql.Field{
-			Type:        todoType,
+			Type:        todos.TodoType,
 			Description: "Get single todo",
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
@@ -171,7 +131,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 		},
 
 		"lastTodo": &graphql.Field{
-			Type:        todoType,
+			Type:        todos.TodoType,
 			Description: "Last todo added",
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 				return TodoList[len(TodoList)-1], nil
@@ -182,7 +142,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 		   curl -g 'http://localhost:8080/graphql?query={todoList{id,text,done}}'
 		*/
 		"todoList": &graphql.Field{
-			Type:        graphql.NewList(todoType),
+			Type:        graphql.NewList(todos.TodoType),
 			Description: "List of todos",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				return TodoList, nil
