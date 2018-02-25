@@ -4,7 +4,7 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-// define custom GraphQL ObjectType `todoType` for our Golang struct `Todo`
+// TodoType define custom GraphQL ObjectType `todoType` for our Golang struct `Todo`
 // Note that
 // - the fields in our todoType maps with the json tags for the fields in our struct
 // - the field type matches the field type in our struct

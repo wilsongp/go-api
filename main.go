@@ -3,16 +3,17 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
+	"time"
+
 	"github.com/wilsongp/go-api/graphql"
 	"github.com/wilsongp/go-api/routing"
 	"github.com/wilsongp/go-api/shortcut"
-	"net/http"
-	"time"
 
 	"github.com/gorilla/handlers"
 )
 
-var addr = "localhost:9000"
+var addr = "localhost:8080"
 
 func main() {
 	routes := append(graphql.Routes, shortcut.Routes...)
