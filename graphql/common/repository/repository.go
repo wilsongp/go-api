@@ -76,8 +76,8 @@ func (db Database) GetDocumentByID(doctype string, id string) (interface{}, erro
 
 // InsertDocument : Add document to database
 func (db Database) InsertDocument(newDoc interface{}, doctype string) (bool, error) {
-
-	if err := db.C(doctype).Insert(newDoc); err != nil {
+	var reflected = newDoc
+	if err := db.C(doctype).Insert(reflected); err != nil {
 		log.Fatal(err)
 		return false, err
 	}

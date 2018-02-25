@@ -33,7 +33,8 @@ var TodoQuery = graphql.Fields{
 
 			_, database := repository.DialServer(repository.SERVER, repository.DBNAME)
 
-			todo, _ := database.GetDocumentByID("todo", idQuery)
+			var todo Todo
+			database.C(COLLECTION).FindId(idQuery).One(&todo)
 
 			return todo, nil
 		},
@@ -49,9 +50,13 @@ var TodoQuery = graphql.Fields{
 
 			_, database := repository.DialServer(repository.SERVER, repository.DBNAME)
 
-			todos, _ := database.GetDocuments("todo", p.Source)
+			var results []Todo
+			if err := database.C(COLLECTION).Find(nil).Limit(100).All(&results); err != nil {
+				fmt.Println("Failed to write get:", err)
+				return results, err
+			}
 
-			return todos, nil
+			return results, nil
 		},
 	},
 }

@@ -3,6 +3,8 @@ package todos
 import (
 	"log"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/wilsongp/go-api/graphql/common/repository"
 
 	"github.com/graphql-go/graphql"
@@ -30,11 +32,12 @@ var TodoMutations = graphql.Fields{
 			_, database := repository.DialServer(repository.SERVER, repository.DBNAME)
 
 			todo := Todo{
-				text: text,
-				done: isDone,
+				ID:   bson.NewObjectId(),
+				Text: text,
+				Done: isDone,
 			}
 
-			if _, err := database.InsertDocument(todo, "todo"); err != nil {
+			if err := database.C(COLLECTION).Insert(todo); err != nil {
 				log.Fatal(err)
 				return nil, err
 			}
@@ -64,11 +67,11 @@ var TodoMutations = graphql.Fields{
 			_, database := repository.DialServer(repository.SERVER, repository.DBNAME)
 
 			var updatedTodo Todo
-			updatedTodo.done = done
+			updatedTodo.Done = done
 
-			if _, err := database.UpdateDocumentByID(id, updatedTodo, "todo"); err != nil {
+			if err := database.C(COLLECTION).UpdateId(id, updatedTodo); err != nil {
 				log.Fatal(err)
-				return nil, err
+				return updatedTodo, err
 			}
 
 			return updatedTodo, nil
