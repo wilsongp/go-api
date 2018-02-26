@@ -27,8 +27,7 @@ var TodoQuery = graphql.Fields{
 
 			idQuery, isOK := params.Args["id"].(string)
 			if !isOK {
-				fmt.Println("Invalid idQuery: ", idQuery)
-				return nil, nil
+				return nil, fmt.Errorf("Invalid idQuery: %s", idQuery)
 			}
 
 			_, conn, err := repository.DialServer(repository.SERVER)
