@@ -26,20 +26,33 @@ var TodoQuery = graphql.Fields{
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 
 			idQuery, isOK := params.Args["id"].(string)
-
 			if !isOK {
-				fmt.Println("invalid ID supplied: ", idQuery)
+				fmt.Println("Invalid idQuery: ", idQuery)
+				return nil, nil
 			}
 
-			_, _, err := repository.DialServer(repository.SERVER)
+			_, conn, err := repository.DialServer(repository.SERVER)
 			if err != nil {
-				// do some awesome error handling
+				fmt.Println("Error connecting to database: ", err)
 			}
 
-			var todo Todo
-			// database.C(COLLECTION).FindId(idQuery).One(&todo)
+			cypher := `MATCH (todo:Todo) WHERE todo.id = {id} RETURN todo.id as id, todo.text as text, todo.done as done LIMIT {limit}`
+			cypherParams := map[string]interface{}{
+				"id":    idQuery,
+				"limit": 1,
+			}
 
-			return todo, nil
+			var result Todo
+			data, _, _, err := conn.QueryNeoAll(cypher, cypherParams)
+			if len(data) == 1 {
+				result = Todo{
+					ID:   data[0][0].(string),
+					Text: data[0][1].(string),
+					Done: data[0][2].(bool),
+				}
+			}
+
+			return result, err
 		},
 	},
 
