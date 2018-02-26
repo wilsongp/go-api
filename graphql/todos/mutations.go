@@ -1,10 +1,6 @@
 package todos
 
 import (
-	"log"
-
-	"gopkg.in/mgo.v2/bson"
-
 	"github.com/wilsongp/go-api/graphql/common/repository"
 
 	"github.com/graphql-go/graphql"
@@ -29,18 +25,17 @@ var TodoMutations = graphql.Fields{
 			text, _ := params.Args["text"].(string)
 			isDone, _ := params.Args["isDone"].(bool)
 
-			_, database := repository.DialServer(repository.SERVER, repository.DBNAME)
+			_, connection := repository.DialServer(repository.SERVER, repository.DBNAME)
 
 			todo := Todo{
-				ID:   bson.NewObjectId(),
 				Text: text,
 				Done: isDone,
 			}
 
-			if err := database.C(COLLECTION).Insert(todo); err != nil {
-				log.Fatal(err)
-				return nil, err
-			}
+			// if err := database.C(COLLECTION).Insert(todo); err != nil {
+			// 	log.Fatal(err)
+			// 	return nil, err
+			// }
 
 			return todo, nil
 		},
@@ -64,15 +59,15 @@ var TodoMutations = graphql.Fields{
 			done, _ := params.Args["done"].(bool)
 			id, _ := params.Args["id"].(string)
 
-			_, database := repository.DialServer(repository.SERVER, repository.DBNAME)
+			_, connection := repository.DialServer(repository.SERVER, repository.DBNAME)
 
 			var updatedTodo Todo
 			updatedTodo.Done = done
 
-			if err := database.C(COLLECTION).UpdateId(id, updatedTodo); err != nil {
-				log.Fatal(err)
-				return updatedTodo, err
-			}
+			// if err := database.C(COLLECTION).UpdateId(id, updatedTodo); err != nil {
+			// 	log.Fatal(err)
+			// 	return updatedTodo, err
+			// }
 
 			return updatedTodo, nil
 		},

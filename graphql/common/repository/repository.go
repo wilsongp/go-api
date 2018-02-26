@@ -2,9 +2,8 @@ package repository
 
 import (
 	"fmt"
-	"log"
 
-	"gopkg.in/mgo.v2"
+	bolt "github.com/johnnadratowski/golang-neo4j-bolt-driver"
 )
 
 // SERVER the DB server
@@ -19,77 +18,37 @@ const DOCNAME = "shortcuts"
 //Repository ...
 type Repository struct{}
 
-// Database : Extends mgo.Database with generic CRUD methods
-type Database struct {
-	*mgo.Database
+// Connection : Extends mgo.Database with generic CRUD methods
+type Connection struct {
+	bolt.Conn
 }
 
-// Session : Extends mgo.Session
-type Session struct {
-	*mgo.Session
+// Driver : Extends mgo.Driver
+type Driver struct {
+	bolt.DriverPool
 }
 
-var _sessions = make(map[string]Session)
+var _driverPools = make(map[string]Driver)
+
+//MAX_CONNECTIONS : Max number of connections to pool
+const MAX_CONNECTIONS = 5
 
 // DialServer : Opens session on supplied server
-func DialServer(connection string, database string) (Session, Database) {
+func DialServer(connection string) (Driver, Connection) {
 
-	if _, ok := _sessions[connection]; !ok {
-		session, err := mgo.Dial(connection)
+	if _, ok := _driverPools[connection]; !ok {
+		driver, err := bolt.NewDriverPool(connection, MAX_CONNECTIONS)
 		if err != nil {
-			fmt.Printf("\nFailed to establish connection to Mongo server '%s':\n'%s'\n\n", connection, err)
+			panic(err)
 		}
 
-		_sessions[connection] = Session{session}
-		fmt.Println("Connected to Mongo server at: ", connection)
+		_driverPools[connection] = Driver{driver}
+		fmt.Println("Connected to Neo4j server at: ", connection)
 	}
 
-	db := _sessions[connection].DB(database)
-	return _sessions[connection], Database{db}
-}
-
-// GetDocuments : Executes a query against the database
-func (db Database) GetDocuments(doctype string, query interface{}) ([]interface{}, error) {
-	c := db.C(doctype)
-
-	var results []interface{}
-	if err := c.Find(query).All(&results); err != nil {
-		fmt.Println("Failed to write results:", err)
-		return results, err
+	db, poolerr := _driverPools[connection].OpenPool()
+	if poolerr != nil {
+		panic(poolerr)
 	}
-
-	return results, nil
-}
-
-// GetDocumentByID : Gets a Mongo doc given doctype and an id string
-func (db Database) GetDocumentByID(doctype string, id string) (interface{}, error) {
-	c := db.C(doctype)
-
-	var result interface{}
-	if err := c.FindId(id).One(&result); err != nil {
-		fmt.Println("Failed to write results:", err)
-		return result, err
-	}
-
-	return result, nil
-}
-
-// InsertDocument : Add document to database
-func (db Database) InsertDocument(newDoc interface{}, doctype string) (bool, error) {
-	var reflected = newDoc
-	if err := db.C(doctype).Insert(reflected); err != nil {
-		log.Fatal(err)
-		return false, err
-	}
-	return true, nil
-}
-
-// UpdateDocumentByID : Update document to database
-func (db Database) UpdateDocumentByID(id string, updated interface{}, doctype string) (bool, error) {
-
-	if err := db.C(doctype).UpdateId(id, updated); err != nil {
-		log.Fatal(err)
-		return false, err
-	}
-	return true, nil
+	return _driverPools[connection], Connection{db}
 }
