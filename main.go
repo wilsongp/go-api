@@ -8,7 +8,6 @@ import (
 
 	"github.com/wilsongp/go-api/graphql"
 	"github.com/wilsongp/go-api/routing"
-	"github.com/wilsongp/go-api/shortcut"
 
 	"github.com/gorilla/handlers"
 )
@@ -16,7 +15,7 @@ import (
 var addr = "localhost:8080"
 
 func main() {
-	routes := append(graphql.Routes, shortcut.Routes...)
+	routes := append(graphql.Routes)
 	router := routing.NewRouter(routes)
 
 	allowedOrigins := handlers.AllowedOrigins([]string{"*"})

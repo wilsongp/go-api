@@ -7,7 +7,7 @@ import (
 )
 
 // SERVER the DB server
-const SERVER = "mongodb://192.168.99.100:32768/"
+const SERVER = "bolt://localhost:32769"
 
 // DBNAME the name of the DB instance
 const DBNAME = "homepage"
@@ -25,7 +25,7 @@ type Connection struct {
 
 // Driver : Extends mgo.Driver
 type Driver struct {
-	bolt.DriverPool
+	bolt.Driver
 }
 
 var _driverPools = make(map[string]Driver)
@@ -34,24 +34,19 @@ var _driverPools = make(map[string]Driver)
 const MAX_CONNECTIONS = 5
 
 // DialServer : Opens session on supplied server
-func DialServer(connection string) (Driver, Connection, []error) {
-	var errors []error
+func DialServer(connection string) (Driver, Connection, error) {
 
 	if _, ok := _driverPools[connection]; !ok {
-		driver, err := bolt.NewDriverPool(connection, MAX_CONNECTIONS)
+		driver := bolt.NewDriver()
 
-		if err != nil {
-			_driverPools[connection] = Driver{driver}
-			fmt.Println("Connected to Neo4j server at: ", connection)
-		} else {
-			errors = append(errors, err)
-		}
+		_driverPools[connection] = Driver{driver}
+		fmt.Println("Connected to Neo4j server at: ", connection)
 	}
 
-	db, poolerr := _driverPools[connection].OpenPool()
-	if poolerr != nil {
-		errors = append(errors, poolerr)
+	db, err := _driverPools[connection].OpenNeo(connection)
+	if err != nil {
+		return Driver{}, Connection{}, err
 	}
 
-	return _driverPools[connection], Connection{db}, errors
+	return _driverPools[connection], Connection{db}, nil
 }

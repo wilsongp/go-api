@@ -31,8 +31,8 @@ var TodoQuery = graphql.Fields{
 				fmt.Println("invalid ID supplied: ", idQuery)
 			}
 
-			_, _, errs := repository.DialServer(repository.SERVER)
-			if len(errs) > 0 {
+			_, _, err := repository.DialServer(repository.SERVER)
+			if err != nil {
 				// do some awesome error handling
 			}
 
@@ -51,13 +51,12 @@ var TodoQuery = graphql.Fields{
 		Description: "List of todos",
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 
-			_, conn, errs := repository.DialServer(repository.SERVER)
-
-			if len(errs) > 0 {
-				// do some awesome error handling
+			_, conn, err := repository.DialServer(repository.SERVER)
+			if err != nil {
+				fmt.Println("Error connecting to database: ", err)
 			}
 
-			cypher := `MATCH (todo:Todo) LIMIT {limit} RETURN todo.id as id, todo.text as text, todo.done as done`
+			cypher := `MATCH (todo:Todo) RETURN todo.id as id, todo.text as text, todo.done as done LIMIT {limit}`
 			data, _, _, err := conn.QueryNeoAll(cypher, map[string]interface{}{"limit": 100})
 
 			results := make([]Todo, len(data))

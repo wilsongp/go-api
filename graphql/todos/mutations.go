@@ -32,13 +32,12 @@ var TodoMutations = graphql.Fields{
 				"id":   newGUID.String(),
 			}
 
-			_, conn, errors := repository.DialServer(repository.SERVER)
-
-			if len(errors) > 0 {
-				// do some error handling
+			_, conn, dialerr := repository.DialServer(repository.SERVER)
+			if dialerr != nil {
+				// do some awesome error handling
 			}
 
-			cypher := `CREATE (n:Todo { id: {id}, text: {text}, done: {done}) RETURN n`
+			cypher := `CREATE (n:Todo { id: {id}, text: {text}, done: {done} }) RETURN n`
 			_, err := conn.ExecNeo(cypher, params)
 
 			result := Todo{
