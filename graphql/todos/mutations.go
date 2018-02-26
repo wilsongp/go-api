@@ -1,6 +1,7 @@
 package todos
 
 import (
+	"github.com/nu7hatch/gouuid"
 	"github.com/wilsongp/go-api/graphql/common/repository"
 
 	"github.com/graphql-go/graphql"
@@ -19,57 +20,37 @@ var TodoMutations = graphql.Fields{
 				Type: graphql.NewNonNull(graphql.String),
 			},
 		},
-		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-
+		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 			// marshall and cast the argument value
-			text, _ := params.Args["text"].(string)
-			isDone, _ := params.Args["isDone"].(bool)
+			text, _ := p.Args["text"].(string)
+			isDone, _ := p.Args["isDone"].(bool)
+			newGUID, _ := uuid.NewV4()
 
-			_, connection := repository.DialServer(repository.SERVER, repository.DBNAME)
+			params := map[string]interface{}{
+				"text": text,
+				"done": isDone,
+				"id":   newGUID.String(),
+			}
 
-			todo := Todo{
+			_, conn, errors := repository.DialServer(repository.SERVER)
+
+			if len(errors) > 0 {
+				// do some error handling
+			}
+
+			cypher := `CREATE (n:Todo { id: {id}, text: {text}, done: {done}) RETURN n`
+			_, err := conn.ExecNeo(cypher, params)
+
+			result := Todo{
+				ID:   newGUID.String(),
 				Text: text,
 				Done: isDone,
 			}
 
-			// if err := database.C(COLLECTION).Insert(todo); err != nil {
-			// 	log.Fatal(err)
-			// 	return nil, err
-			// }
-
-			return todo, nil
+			return result, err
 		},
 	},
 	/*
 	   curl -g 'http://localhost:8080/graphql?query=mutation+_{updateTodo(id:"a",done:true){id,text,done}}'
 	*/
-	"updateTodo": &graphql.Field{
-		Type:        TodoType, // the return type for this field
-		Description: "Update existing todo, mark it done or not done",
-		Args: graphql.FieldConfigArgument{
-			"done": &graphql.ArgumentConfig{
-				Type: graphql.Boolean,
-			},
-			"id": &graphql.ArgumentConfig{
-				Type: graphql.NewNonNull(graphql.String),
-			},
-		},
-		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-			// marshall and cast the argument value
-			done, _ := params.Args["done"].(bool)
-			id, _ := params.Args["id"].(string)
-
-			_, connection := repository.DialServer(repository.SERVER, repository.DBNAME)
-
-			var updatedTodo Todo
-			updatedTodo.Done = done
-
-			// if err := database.C(COLLECTION).UpdateId(id, updatedTodo); err != nil {
-			// 	log.Fatal(err)
-			// 	return updatedTodo, err
-			// }
-
-			return updatedTodo, nil
-		},
-	},
 }

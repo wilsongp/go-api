@@ -34,21 +34,24 @@ var _driverPools = make(map[string]Driver)
 const MAX_CONNECTIONS = 5
 
 // DialServer : Opens session on supplied server
-func DialServer(connection string) (Driver, Connection) {
+func DialServer(connection string) (Driver, Connection, []error) {
+	var errors []error
 
 	if _, ok := _driverPools[connection]; !ok {
 		driver, err := bolt.NewDriverPool(connection, MAX_CONNECTIONS)
-		if err != nil {
-			panic(err)
-		}
 
-		_driverPools[connection] = Driver{driver}
-		fmt.Println("Connected to Neo4j server at: ", connection)
+		if err != nil {
+			_driverPools[connection] = Driver{driver}
+			fmt.Println("Connected to Neo4j server at: ", connection)
+		} else {
+			errors = append(errors, err)
+		}
 	}
 
 	db, poolerr := _driverPools[connection].OpenPool()
 	if poolerr != nil {
-		panic(poolerr)
+		errors = append(errors, poolerr)
 	}
-	return _driverPools[connection], Connection{db}
+
+	return _driverPools[connection], Connection{db}, errors
 }
