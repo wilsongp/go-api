@@ -7,13 +7,16 @@ import (
 )
 
 // SERVER the DB server
-const SERVER = "bolt://localhost:32769"
+const SERVER = "bolt://neo4j:test@localhost:32769"
 
 // DBNAME the name of the DB instance
 const DBNAME = "homepage"
 
 // DOCNAME the name of the document
 const DOCNAME = "shortcuts"
+
+//MAX_CONNECTIONS : Max number of connections to pool
+const MAX_CONNECTIONS = 5
 
 //Repository ...
 type Repository struct{}
@@ -25,28 +28,28 @@ type Connection struct {
 
 // Driver : Extends mgo.Driver
 type Driver struct {
-	bolt.Driver
+	bolt.DriverPool
 }
 
 var _driverPools = make(map[string]Driver)
-
-//MAX_CONNECTIONS : Max number of connections to pool
-const MAX_CONNECTIONS = 5
 
 // DialServer : Opens session on supplied server
 func DialServer(connection string) (Driver, Connection, error) {
 
 	if _, ok := _driverPools[connection]; !ok {
-		driver := bolt.NewDriver()
+		driver, err := bolt.NewDriverPool(connection, MAX_CONNECTIONS)
+		if err != nil {
+			return Driver{}, Connection{}, err
+		}
 
 		_driverPools[connection] = Driver{driver}
-		fmt.Println("Connected to Neo4j server at: ", connection)
+		fmt.Println("Connected to Neo4j server...")
 	}
 
-	db, err := _driverPools[connection].OpenNeo(connection)
+	conn, err := _driverPools[connection].OpenPool()
 	if err != nil {
 		return Driver{}, Connection{}, err
 	}
 
-	return _driverPools[connection], Connection{db}, nil
+	return _driverPools[connection], Connection{conn}, nil
 }

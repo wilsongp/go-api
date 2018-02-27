@@ -34,6 +34,7 @@ var TodoQuery = graphql.Fields{
 			if err != nil {
 				fmt.Println("Error connecting to database: ", err)
 			}
+			defer conn.Close()
 
 			cypher := `MATCH (todo:Todo) WHERE todo.id = {id} RETURN todo.id as id, todo.text as text, todo.done as done LIMIT {limit}`
 			cypherParams := map[string]interface{}{
@@ -67,6 +68,7 @@ var TodoQuery = graphql.Fields{
 			if err != nil {
 				fmt.Println("Error connecting to database: ", err)
 			}
+			defer conn.Close()
 
 			cypher := `MATCH (todo:Todo) RETURN todo.id as id, todo.text as text, todo.done as done LIMIT {limit}`
 			data, _, _, err := conn.QueryNeoAll(cypher, map[string]interface{}{"limit": 100})

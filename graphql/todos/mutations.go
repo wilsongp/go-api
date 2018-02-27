@@ -36,6 +36,7 @@ var TodoMutations = graphql.Fields{
 			if dialerr != nil {
 				// do some awesome error handling
 			}
+			defer conn.Close()
 
 			cypher := `CREATE (n:Todo { id: {id}, text: {text}, done: {done} }) RETURN n`
 			_, err := conn.ExecNeo(cypher, params)
