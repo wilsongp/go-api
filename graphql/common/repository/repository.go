@@ -2,12 +2,13 @@ package repository
 
 import (
 	"fmt"
+	"os"
 
 	bolt "github.com/johnnadratowski/golang-neo4j-bolt-driver"
 )
 
 // SERVER the DB server
-const SERVER = "bolt://neo4j:test@localhost:32769"
+var SERVER = "localhost:32769"
 
 // DBNAME the name of the DB instance
 const DBNAME = "homepage"
@@ -35,9 +36,10 @@ var _driverPools = make(map[string]Driver)
 
 // DialServer : Opens session on supplied server
 func DialServer(connection string) (Driver, Connection, error) {
+	var authConnection = "bolt://" + os.Getenv("NEO4J_USER") + ":" + os.Getenv("NEO4J_PASSWORD") + "@" + connection
 
 	if _, ok := _driverPools[connection]; !ok {
-		driver, err := bolt.NewDriverPool(connection, MAX_CONNECTIONS)
+		driver, err := bolt.NewDriverPool(authConnection, MAX_CONNECTIONS)
 		if err != nil {
 			return Driver{}, Connection{}, err
 		}
