@@ -8,7 +8,7 @@ import (
 )
 
 // SERVER the DB server
-const SERVER = "localhost:32769"
+var SERVER = "bolt://" + os.Getenv("NEO4J_USER") + ":" + os.Getenv("NEO4J_PASSWORD") + "@" + os.Getenv("NEO4J_HOST") + ":" + os.Getenv("NEO4J_PORT")
 
 //MAX_CONNECTIONS : Max number of connections to pool
 const MAX_CONNECTIONS = 5
@@ -30,10 +30,9 @@ var _driverPools = make(map[string]Driver)
 
 // DialServer : Opens session on supplied server
 func DialServer(host string) (Driver, Connection, error) {
-	var authConnection = "bolt://" + os.Getenv("NEO4J_USER") + ":" + os.Getenv("NEO4J_PASSWORD") + "@" + host
 
 	if _, ok := _driverPools[host]; !ok {
-		driver, err := bolt.NewDriverPool(authConnection, MAX_CONNECTIONS)
+		driver, err := bolt.NewDriverPool(host, MAX_CONNECTIONS)
 		if err != nil {
 			return Driver{}, Connection{}, err
 		}
