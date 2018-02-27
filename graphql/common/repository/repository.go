@@ -8,13 +8,7 @@ import (
 )
 
 // SERVER the DB server
-var SERVER = "localhost:32769"
-
-// DBNAME the name of the DB instance
-const DBNAME = "homepage"
-
-// DOCNAME the name of the document
-const DOCNAME = "shortcuts"
+const SERVER = "localhost:32769"
 
 //MAX_CONNECTIONS : Max number of connections to pool
 const MAX_CONNECTIONS = 5
@@ -35,23 +29,23 @@ type Driver struct {
 var _driverPools = make(map[string]Driver)
 
 // DialServer : Opens session on supplied server
-func DialServer(connection string) (Driver, Connection, error) {
-	var authConnection = "bolt://" + os.Getenv("NEO4J_USER") + ":" + os.Getenv("NEO4J_PASSWORD") + "@" + connection
+func DialServer(host string) (Driver, Connection, error) {
+	var authConnection = "bolt://" + os.Getenv("NEO4J_USER") + ":" + os.Getenv("NEO4J_PASSWORD") + "@" + host
 
-	if _, ok := _driverPools[connection]; !ok {
+	if _, ok := _driverPools[host]; !ok {
 		driver, err := bolt.NewDriverPool(authConnection, MAX_CONNECTIONS)
 		if err != nil {
 			return Driver{}, Connection{}, err
 		}
 
-		_driverPools[connection] = Driver{driver}
+		_driverPools[host] = Driver{driver}
 		fmt.Println("Connected to Neo4j server...")
 	}
 
-	conn, err := _driverPools[connection].OpenPool()
+	conn, err := _driverPools[host].OpenPool()
 	if err != nil {
 		return Driver{}, Connection{}, err
 	}
 
-	return _driverPools[connection], Connection{conn}, nil
+	return _driverPools[host], Connection{conn}, nil
 }
